@@ -1,0 +1,17 @@
+spring:
+  profiles: default
+  datasource:
+    driverClassName: com.mysql.jdbc.Driver
+    url: ${DATABASE_URL} # full jdbc url
+    connection-timeout: 20 # in seconds
+  jpa:
+    hibernate:
+       ddl-auto: none
+       naming:
+          physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    generate-ddl: false
+   
+server:
+   error:
+      whitelabel:
+         enabled: false
