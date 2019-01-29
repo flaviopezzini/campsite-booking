@@ -1,4 +1,4 @@
-package com.upgrade.booking.config;
+package com.upgrade.campsite.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;

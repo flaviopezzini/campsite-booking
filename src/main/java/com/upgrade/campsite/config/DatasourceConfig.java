@@ -1,4 +1,4 @@
-package com.upgrade.booking.config;
+package com.upgrade.campsite.config;
 
 import java.sql.SQLException;
 import javax.sql.DataSource;

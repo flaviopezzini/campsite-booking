@@ -1,4 +1,4 @@
-package com.upgrade.booking;
+package com.upgrade.campsite;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
