@@ -1,13 +1,16 @@
-package com.upgrade.campsite.booking;
+package com.upgrade.campsite.reservation;
 
 import java.time.LocalDate;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import org.hibernate.annotations.GenericGenerator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.upgrade.campsite.resource.Resource;
 import com.upgrade.campsite.shared.LocalDateSerializer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,7 +18,7 @@ import lombok.Data;
 @Entity
 @Data
 @AllArgsConstructor
-public class Booking {
+public class Reservation {
 
   @Id
   @GeneratedValue(generator = "uuid2")
@@ -38,5 +41,9 @@ public class Booking {
   @JsonProperty("departureDate")
   @JsonSerialize(using = LocalDateSerializer.class)
   private LocalDate departureDate;
+  
+  @ManyToOne
+  @JoinColumn(name = "resourceId")
+  private Resource resource;
   
 }

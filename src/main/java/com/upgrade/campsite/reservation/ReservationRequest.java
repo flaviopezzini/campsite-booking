@@ -1,20 +1,29 @@
-package com.upgrade.campsite.booking;
+package com.upgrade.campsite.reservation;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import org.springframework.util.StringUtils;
+import com.upgrade.campsite.resource.Resource;
 import com.upgrade.campsite.shared.DateFormats;
 import com.upgrade.campsite.shared.InvalidRecordException;
 import lombok.Data;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 @Data
-public class BookingRequest {
+@RequiredArgsConstructor
+public class ReservationRequest {
 
   private String id;
+  @NonNull
   private String email;
+  @NonNull
   private String name;
+  @NonNull
   private String arrivalDate;
+  @NonNull
   private String departureDate;
+  private String resourceId;
   
   private LocalDate parsedArrivalDate;
   private LocalDate parsedDepartureDate;
@@ -54,19 +63,19 @@ public class BookingRequest {
     }
   }
   
-  public Booking createNewBooking() throws InvalidRecordException {
+  public Reservation createNewReservation(Resource resource) throws InvalidRecordException {
     validate();
-    return new Booking(null, email, name, parsedArrivalDate, parsedDepartureDate);
+    return new Reservation(null, email, name, parsedArrivalDate, parsedDepartureDate, resource);
   }
   
-  public Booking updateBooking(Booking oldBooking) throws InvalidRecordException {
+  public Reservation updateReservation(Reservation oldReservation) throws InvalidRecordException {
     validate();
-    oldBooking.setId(id);
-    oldBooking.setEmail(email);
-    oldBooking.setName(name);
-    oldBooking.setArrivalDate(parsedArrivalDate);
-    oldBooking.setDepartureDate(parsedDepartureDate);
-    return oldBooking;
+    oldReservation.setId(id);
+    oldReservation.setEmail(email);
+    oldReservation.setName(name);
+    oldReservation.setArrivalDate(parsedArrivalDate);
+    oldReservation.setDepartureDate(parsedDepartureDate);
+    return oldReservation;
   }
   
 }
