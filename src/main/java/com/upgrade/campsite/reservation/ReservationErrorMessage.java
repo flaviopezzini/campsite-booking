@@ -8,7 +8,8 @@ public enum ReservationErrorMessage {
   DEPARTURE_DATE_HAS_TO_BE_AFTER_ARRIVAL_DATE("Departure Date has to be after Arrival Date."),
   RESERVATION_HAS_TO_BE_A_MINIMUM_1_DAY_AHEAD("Reservation has to be a minimum 1 day(s) ahead of arrival."),
   RESERVATION_CAN_BE_UP_TO_A_MONTH_IN_ADVANCE("Reservation can be up to a month in advance."),
-  NO_ID_PROVIDED("No ID provided.");
+  NO_ID_PROVIDED("No ID provided."),
+  RECORD_NOT_FOUND("Trying ot update reservation with id: %s but the record was not found.");
   
   private String message;
   

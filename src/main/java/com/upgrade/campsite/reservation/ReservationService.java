@@ -35,8 +35,7 @@ public class ReservationService {
       Reservation oldReservation = findById(record.getId());
       if (oldReservation == null) {
         throw new RecordNotFoundException(
-            String.format("Trying ot update reservation with id: %s but the record was not found.",
-                record.getId()));
+            String.format(ReservationErrorMessage.RECORD_NOT_FOUND.message(), record.getId()));
       }
       toSave = record.updateReservation(oldReservation);
       availabilityService.freeDates(oldReservation.getArrivalDate(),

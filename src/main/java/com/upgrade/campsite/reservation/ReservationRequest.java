@@ -23,7 +23,7 @@ public class ReservationRequest {
 
   private LocalDate parsedArrivalDate;
   private LocalDate parsedDepartureDate;
-
+  
   private void validate() throws InvalidRecordException {
     if (StringUtils.isEmpty(email)) {
       throw new InvalidRecordException(
@@ -94,5 +94,5 @@ public class ReservationRequest {
     oldReservation.setDepartureDate(parsedDepartureDate);
     return oldReservation;
   }
-
+  
 }
