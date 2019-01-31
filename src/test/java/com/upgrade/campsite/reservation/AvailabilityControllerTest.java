@@ -15,19 +15,21 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.upgrade.campsite.shared.DateFormats;
+import com.upgrade.campsite.shared.StringUtils;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("test")
+@Sql({"/data-h2.sql"})
 @AutoConfigureMockMvc
-public class ReservationControllerAvailabilityTest {
+public class AvailabilityControllerTest {
 
   public static final MediaType APPLICATION_JSON_UTF8 =
       new MediaType(MediaType.APPLICATION_JSON.getType(), MediaType.APPLICATION_JSON.getSubtype(),
@@ -38,6 +40,14 @@ public class ReservationControllerAvailabilityTest {
 
   @Autowired
   private ObjectMapper objectMapper;
+  
+  private String buildUrl(LocalDate startDate, LocalDate endDate) {
+    DateTimeFormatter formatter = DateFormats.LOCAL_DATE.formatter();
+    String formattedStartDate = (startDate == null ? StringUtils.EMPTY : startDate.format(formatter));
+    String formattedEndDate = (endDate == null ? StringUtils.EMPTY : endDate.format(formatter));
+    return String.format("%s?startDate=%s&endDate=%s", AvailabilityController.AVAILABILITY_END_POINT,
+        formattedStartDate, formattedEndDate);
+  }
 
   @Test
   public void shouldWorkWithoutParameters() throws Exception {
@@ -50,7 +60,7 @@ public class ReservationControllerAvailabilityTest {
 
     String expectedJson = objectMapper.writeValueAsString(expectedAvailableDates);
 
-    this.mockMvc.perform(get(ReservationController.AVAILABILITY_END_POINT)).andDo(print())
+    this.mockMvc.perform(get(buildUrl(null, null))).andDo(print())
         .andExpect(status().isOk()).andExpect(content().string(equalTo(expectedJson)));
   }
 
@@ -61,6 +71,7 @@ public class ReservationControllerAvailabilityTest {
     expectedAvailableDates.add(LocalDate.now().plusDays(2).format(formatter));
     expectedAvailableDates.add(LocalDate.now().plusDays(5).format(formatter));
     expectedAvailableDates.add(LocalDate.now().plusDays(6).format(formatter));
+    expectedAvailableDates.add(LocalDate.now().plusDays(7).format(formatter));
     String expectedJson = objectMapper.writeValueAsString(expectedAvailableDates);
 
     LocalDate startDate = LocalDate.now().plusDays(2);
@@ -78,72 +89,63 @@ public class ReservationControllerAvailabilityTest {
     this.mockMvc
         .perform(post(ReservationController.REST_PREFIX).contentType(APPLICATION_JSON_UTF8)
             .content(requestJson))
-        .andDo(print()).andExpect(status().isOk())
-        .andExpect(content().string(equalTo(expectedJson)));
+        .andDo(print()).andExpect(status().isCreated());
 
     this.mockMvc
-        .perform(get(ReservationController.AVAILABILITY_END_POINT + "?startDate="
-            + startDate.format(formatter) + "&endDate=" + endDate.format(formatter)))
+        .perform(get(buildUrl(startDate, endDate)))
         .andDo(print()).andExpect(status().isOk())
         .andExpect(content().string(equalTo(expectedJson)));
   }
 
   @Test
   public void shouldFailForMissingEndDate() throws Exception {
+    LocalDate startDate = LocalDate.now();
     this.mockMvc
-        .perform(get(ReservationController.AVAILABILITY_END_POINT + "?startDate=1900-13-32"))
-        .andDo(print()).andExpect(status().is(HttpStatus.BAD_REQUEST.value()))
-        .andExpect(content().string(equalTo(ReservationController.DATES_REQUIRED)));
+        .perform(get(buildUrl(startDate, null)))
+        .andDo(print()).andExpect(status().isBadRequest())
+        .andExpect(content().string(equalTo(AvailabilityController.DATES_REQUIRED)));
   }
 
   @Test
   public void shouldFailForMissingStartDate() throws Exception {
-    this.mockMvc.perform(get(ReservationController.AVAILABILITY_END_POINT + "?endDate=1900-13-32"))
-        .andDo(print()).andExpect(status().is(HttpStatus.BAD_REQUEST.value()))
-        .andExpect(content().string(equalTo(ReservationController.DATES_REQUIRED)));
+    LocalDate endDate = LocalDate.now().plusDays(5);
+    this.mockMvc.perform(get(buildUrl(null, endDate)))
+        .andDo(print()).andExpect(status().isBadRequest())
+        .andExpect(content().string(equalTo(AvailabilityController.DATES_REQUIRED)));
   }
 
   @Test
   public void shouldFailForInvalidStartDate() throws Exception {
     LocalDate endDate = LocalDate.now().plusDays(20);
     this.mockMvc
-        .perform(get(ReservationController.AVAILABILITY_END_POINT + "?startDate=1900-13-32&endDate="
+        .perform(get(AvailabilityController.AVAILABILITY_END_POINT + "?startDate=1900-13-32&endDate="
             + endDate.format(DateFormats.LOCAL_DATE.formatter())))
-        .andDo(print()).andExpect(status().is(HttpStatus.BAD_REQUEST.value()))
-        .andExpect(content().string(equalTo(ReservationController.INVALID_DATE_FORMAT)));
+        .andDo(print()).andExpect(status().isBadRequest())
+        .andExpect(content().string(equalTo(AvailabilityController.INVALID_DATE_FORMAT)));
   }
 
   @Test
   public void shouldFailForStartDateInThePast() throws Exception {
     LocalDate yesterday = LocalDate.now().minusDays(1);
     LocalDate aMonthAhead = LocalDate.now().plusDays(30);
-    DateTimeFormatter formatter = DateFormats.LOCAL_DATE.formatter();
-    String url = ReservationController.AVAILABILITY_END_POINT + "?startDate="
-        + yesterday.format(formatter) + "&endDate=" + aMonthAhead.format(formatter);
-    this.mockMvc.perform(get(url)).andDo(print())
-        .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
+    this.mockMvc.perform(get(buildUrl(yesterday, aMonthAhead))).andDo(print())
+        .andExpect(status().isBadRequest());
   }
 
   @Test
   public void shouldFailForStartDateToday() throws Exception {
     LocalDate today = LocalDate.now();
     LocalDate aMonthAhead = LocalDate.now().plusDays(30);
-    DateTimeFormatter formatter = DateFormats.LOCAL_DATE.formatter();
-    String url = ReservationController.AVAILABILITY_END_POINT + "?startDate="
-        + today.format(formatter) + "&endDate=" + aMonthAhead.format(formatter);
-    this.mockMvc.perform(get(url)).andDo(print())
-        .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
+    this.mockMvc.perform(get(buildUrl(today, aMonthAhead))).andDo(print())
+        .andExpect(status().isBadRequest());
   }
 
   @Test
   public void shouldFailForStartDateAfterEndDate() throws Exception {
     LocalDate startDate = LocalDate.now().plusDays(2);
     LocalDate endDate = LocalDate.now().plusDays(1);
-    DateTimeFormatter formatter = DateFormats.LOCAL_DATE.formatter();
-    String url = ReservationController.AVAILABILITY_END_POINT + "?startDate="
-        + startDate.format(formatter) + "&endDate=" + endDate.format(formatter);
-    this.mockMvc.perform(get(url)).andDo(print())
-        .andExpect(status().is(HttpStatus.BAD_REQUEST.value()));
+    this.mockMvc.perform(get(buildUrl(startDate, endDate))).andDo(print())
+        .andExpect(status().isBadRequest());
   }
 
 }

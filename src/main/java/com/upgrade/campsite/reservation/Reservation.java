@@ -8,16 +8,17 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import org.hibernate.annotations.GenericGenerator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.upgrade.campsite.resource.Resource;
 import com.upgrade.campsite.shared.LocalDateSerializer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class Reservation {
 
   @Id
@@ -33,12 +34,10 @@ public class Reservation {
   private String name;
   
   @Column(nullable = false)
-  @JsonProperty("arrivalDate")
   @JsonSerialize(using = LocalDateSerializer.class)
   private LocalDate arrivalDate;
   
   @Column(nullable = false)
-  @JsonProperty("departureDate")
   @JsonSerialize(using = LocalDateSerializer.class)
   private LocalDate departureDate;
   

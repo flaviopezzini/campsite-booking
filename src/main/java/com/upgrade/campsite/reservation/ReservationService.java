@@ -1,50 +1,29 @@
 package com.upgrade.campsite.reservation;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.upgrade.campsite.availability.AvailabilityService;
 import com.upgrade.campsite.resource.Resource;
 import com.upgrade.campsite.resource.ResourceService;
-import com.upgrade.campsite.shared.DateFormats;
 import com.upgrade.campsite.shared.InvalidRecordException;
+import com.upgrade.campsite.shared.RecordNotFoundException;
 
 @Service
 public class ReservationService {
 
   private ReservationRepository reservationRepository;
   private ResourceService resourceService;
+  private AvailabilityService availabilityService;
 
   @Autowired
   public ReservationService(ReservationRepository reservationRepository,
-      ResourceService resourceService) {
+      ResourceService resourceService,
+      AvailabilityService availabilityService) {
     super();
     this.reservationRepository = reservationRepository;
     this.resourceService = resourceService;
-  }
-
-  public List<String> findAvailabilityByDateRange(LocalDate startDate, LocalDate endDate) {
-    List<Reservation> reservations = reservationRepository.findByDateRange(startDate, endDate);
-    
-    List<String> availableDates = new ArrayList<>(0);
-    LocalDate workingDate = startDate;
-    while(workingDate.isBefore(endDate)) {
-      boolean available = true;
-      for (Reservation reservation : reservations) {
-        if (workingDate.isAfter(reservation.getArrivalDate()) || workingDate.isBefore(reservation.getDepartureDate())) {
-          available = false;
-          break;
-        }
-      }
-      if (available) {
-        availableDates.add(workingDate.format(DateFormats.LOCAL_DATE.formatter()));
-      }
-      workingDate = workingDate.plusDays(1);
-    }
-    
-    return availableDates;
+    this.availabilityService = availabilityService;
   }
 
   public Reservation save(ReservationRequest record) throws InvalidRecordException {
@@ -55,7 +34,9 @@ public class ReservationService {
     } else {
       Reservation oldReservation = findById(record.getId());
       toSave = record.updateReservation(oldReservation);
+      availabilityService.freeDates(oldReservation.getArrivalDate(), oldReservation.getDepartureDate());
     }
+    availabilityService.lockDates(toSave.getArrivalDate(), toSave.getDepartureDate());
     return reservationRepository.save(toSave);
   }
   
@@ -65,7 +46,13 @@ public class ReservationService {
     return record.isPresent() ? record.get() : null;
   }
 
-  public void delete(String id) {
-    reservationRepository.deleteById(id);
+  public void delete(String id) throws RecordNotFoundException {
+    Reservation dbReservation = findById(id);
+    if (dbReservation == null) {
+      throw new RecordNotFoundException("Reservation not found when trying to delete: " + id);
+    } else {
+      availabilityService.freeDates(dbReservation.getArrivalDate(), dbReservation.getDepartureDate());
+      reservationRepository.deleteById(id);
+    }
   }
 }

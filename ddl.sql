@@ -27,3 +27,12 @@ CREATE TABLE `reservation` (
   KEY `IDX_departureDate` (`departureDate`),
   CONSTRAINT `FK_resource` FOREIGN KEY (`resourceId`) REFERENCES `resource` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf16;
+
+CREATE TABLE `availability` (
+  `date` datetime NOT NULL,
+  `available` tinyint(1) NOT NULL,
+  PRIMARY KEY (`date`),
+  UNIQUE KEY `date_UNIQUE` (`date`),
+  KEY `IDX_DATEANDAVAILABLE` (`date`,`available`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf16;
+

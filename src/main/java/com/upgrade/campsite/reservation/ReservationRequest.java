@@ -2,6 +2,7 @@ package com.upgrade.campsite.reservation;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import org.springframework.util.StringUtils;
 import com.upgrade.campsite.resource.Resource;
 import com.upgrade.campsite.shared.DateFormats;
@@ -24,50 +25,61 @@ public class ReservationRequest {
   @NonNull
   private String departureDate;
   private String resourceId;
-  
+
   private LocalDate parsedArrivalDate;
   private LocalDate parsedDepartureDate;
-  
+
   private void validate() throws InvalidRecordException {
-    String errorMessage = null;
     if (StringUtils.isEmpty(email)) {
-      errorMessage = "Email is required.";
+      throw new InvalidRecordException("Email is required.");
     }
-    
+
     if (StringUtils.isEmpty(name)) {
-      errorMessage = "Name is required.";
+      throw new InvalidRecordException("Name is required.");
     }
-    
+
     if (StringUtils.isEmpty(arrivalDate)) {
-      errorMessage = "Arrival Date is required.";
+      throw new InvalidRecordException("Arrival Date is required.");
     }
-    
+
     if (StringUtils.isEmpty(departureDate)) {
-      errorMessage = "Departure Date is required.";
+      throw new InvalidRecordException("Departure Date is required.");
     }
-    
+
     try {
       parsedArrivalDate = LocalDate.parse(arrivalDate, DateFormats.LOCAL_DATE.formatter());
     } catch (DateTimeParseException e) {
-      errorMessage = "Arrival Date has an an invalid format";
+      throw new InvalidRecordException("Arrival Date has an an invalid format.");
     }
-    
+
     try {
       parsedDepartureDate = LocalDate.parse(departureDate, DateFormats.LOCAL_DATE.formatter());
     } catch (DateTimeParseException e) {
-      errorMessage = "Departure Date has an invalid format";
+      throw new InvalidRecordException("Departure Date has an invalid format.");
+    }
+
+    long daysBetweenArrivalAndDeparture = ChronoUnit.DAYS.between(parsedArrivalDate, parsedDepartureDate);
+    if (daysBetweenArrivalAndDeparture > 3L) {
+      throw new InvalidRecordException("Maximum stay is 3 days.");
+    } else if (daysBetweenArrivalAndDeparture < 1L) {
+      throw new InvalidRecordException("Departure Date has to be after Arrival Date.");
     }
     
-    if (errorMessage != null) {
-      throw new InvalidRecordException(errorMessage);
+    LocalDate today = LocalDate.now();
+    long daysBetweenArrivalAndToday = ChronoUnit.DAYS.between(today, parsedArrivalDate);
+    if (daysBetweenArrivalAndToday < 1L) {
+      throw new InvalidRecordException("Reservation has to be a minimum 1 day(s) ahead of arrival.");
+    } else if (daysBetweenArrivalAndToday > 30L) {
+      throw new InvalidRecordException("Reservation has to be up to a month in advance.");
     }
+
   }
-  
+
   public Reservation createNewReservation(Resource resource) throws InvalidRecordException {
     validate();
     return new Reservation(null, email, name, parsedArrivalDate, parsedDepartureDate, resource);
   }
-  
+
   public Reservation updateReservation(Reservation oldReservation) throws InvalidRecordException {
     validate();
     oldReservation.setId(id);
@@ -77,5 +89,5 @@ public class ReservationRequest {
     oldReservation.setDepartureDate(parsedDepartureDate);
     return oldReservation;
   }
-  
+
 }
