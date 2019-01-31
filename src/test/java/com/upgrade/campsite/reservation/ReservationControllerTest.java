@@ -24,6 +24,15 @@ import com.upgrade.campsite.shared.StringUtils;
 @AutoConfigureMockMvc
 public class ReservationControllerTest {
 
+  private static final String EMPTY_EMAIL_RESPONSE =
+      "{\"message\":\"validation error\",\"fieldErrors\":[{\"codes\":null,\"arguments\":null,\"defaultMessage\":\"must not be null\",\"objectName\":\"email\",\"field\":\"email\",\"rejectedValue\":null,\"bindingFailure\":false,\"code\":null}]}";
+  private static final String EMPTY_NAME_RESPONSE =
+      "{\"message\":\"validation error\",\"fieldErrors\":[{\"codes\":null,\"arguments\":null,\"defaultMessage\":\"must not be null\",\"objectName\":\"name\",\"field\":\"name\",\"rejectedValue\":null,\"bindingFailure\":false,\"code\":null}]}";
+  private static final String EMPTY_ARRIVAL_DATE_RESPONSE =
+      "{\"message\":\"validation error\",\"fieldErrors\":[{\"codes\":null,\"arguments\":null,\"defaultMessage\":\"must not be null\",\"objectName\":\"arrivalDate\",\"field\":\"arrivalDate\",\"rejectedValue\":null,\"bindingFailure\":false,\"code\":null}]}";;
+  private static final String EMPTY_DEPARTURE_DATE_RESPONSE =
+      "{\"message\":\"validation error\",\"fieldErrors\":[{\"codes\":null,\"arguments\":null,\"defaultMessage\":\"must not be null\",\"objectName\":\"departureDate\",\"field\":\"departureDate\",\"rejectedValue\":null,\"bindingFailure\":false,\"code\":null}]}";;
+
   @Autowired
   private MockMvc mockMvc;
   @Autowired
@@ -45,16 +54,21 @@ public class ReservationControllerTest {
   @Test
   public void shouldFailSaveWhenEmptyEmail() throws Exception {
     ReservationRequest reservationRequest = new ReservationRequest();
+    reservationRequest.setName("name");
+    reservationRequest.setArrivalDate("2018-03-03");
+    reservationRequest.setDepartureDate("2018-03-03");
     saveReservationOperation.perform(mockMvc, reservationRequest, HttpStatus.BAD_REQUEST.value(),
-        String.format(ReservationErrorMessage.IS_REQUIRED.message(), "Email"));
+        EMPTY_EMAIL_RESPONSE);
   }
 
   @Test
   public void shouldFailSaveWhenEmptyName() throws Exception {
     ReservationRequest reservationRequest = new ReservationRequest();
     reservationRequest.setEmail("email");
+    reservationRequest.setArrivalDate("2018-03-01");
+    reservationRequest.setDepartureDate("2018-03-03");
     saveReservationOperation.perform(mockMvc, reservationRequest, HttpStatus.BAD_REQUEST.value(),
-        String.format(ReservationErrorMessage.IS_REQUIRED.message(), "Name"));
+        EMPTY_NAME_RESPONSE);
   }
 
   @Test
@@ -62,8 +76,9 @@ public class ReservationControllerTest {
     ReservationRequest reservationRequest = new ReservationRequest();
     reservationRequest.setEmail("email");
     reservationRequest.setName("name");
+    reservationRequest.setDepartureDate("2018-03-03");
     saveReservationOperation.perform(mockMvc, reservationRequest, HttpStatus.BAD_REQUEST.value(),
-        String.format(ReservationErrorMessage.IS_REQUIRED.message(), "Arrival Date"));
+        EMPTY_ARRIVAL_DATE_RESPONSE);
   }
 
   @Test
@@ -73,7 +88,7 @@ public class ReservationControllerTest {
     reservationRequest.setName("name");
     reservationRequest.setArrivalDate("2018-03-03");
     saveReservationOperation.perform(mockMvc, reservationRequest, HttpStatus.BAD_REQUEST.value(),
-        String.format(ReservationErrorMessage.IS_REQUIRED.message(), "Departure Date"));
+        EMPTY_DEPARTURE_DATE_RESPONSE);
   }
 
   @Test
@@ -141,18 +156,21 @@ public class ReservationControllerTest {
   @Test
   public void shouldFailUpdateWhenEmptyEmail() throws Exception {
     ReservationRequest reservationRequest = new ReservationRequest();
+    reservationRequest.setName("name");
+    reservationRequest.setArrivalDate("2018-03-03");
+    reservationRequest.setDepartureDate("2018-03-03");
     updateReservationOperation.performWithId(mockMvc, reservationRequest,
-        HttpStatus.BAD_REQUEST.value(),
-        String.format(ReservationErrorMessage.IS_REQUIRED.message(), "Email"));
+        HttpStatus.BAD_REQUEST.value(), EMPTY_EMAIL_RESPONSE);
   }
 
   @Test
   public void shouldFailUpdateWhenEmptyName() throws Exception {
     ReservationRequest reservationRequest = new ReservationRequest();
     reservationRequest.setEmail("email");
+    reservationRequest.setArrivalDate("2018-03-01");
+    reservationRequest.setDepartureDate("2018-03-03");
     updateReservationOperation.performWithId(mockMvc, reservationRequest,
-        HttpStatus.BAD_REQUEST.value(),
-        String.format(ReservationErrorMessage.IS_REQUIRED.message(), "Name"));
+        HttpStatus.BAD_REQUEST.value(), EMPTY_NAME_RESPONSE);
   }
 
   @Test
@@ -160,9 +178,9 @@ public class ReservationControllerTest {
     ReservationRequest reservationRequest = new ReservationRequest();
     reservationRequest.setEmail("email");
     reservationRequest.setName("name");
+    reservationRequest.setDepartureDate("2018-03-03");
     updateReservationOperation.performWithId(mockMvc, reservationRequest,
-        HttpStatus.BAD_REQUEST.value(),
-        String.format(ReservationErrorMessage.IS_REQUIRED.message(), "Arrival Date"));
+        HttpStatus.BAD_REQUEST.value(), EMPTY_ARRIVAL_DATE_RESPONSE);
   }
 
   @Test
@@ -172,8 +190,7 @@ public class ReservationControllerTest {
     reservationRequest.setName("name");
     reservationRequest.setArrivalDate("2018-03-03");
     updateReservationOperation.performWithId(mockMvc, reservationRequest,
-        HttpStatus.BAD_REQUEST.value(),
-        String.format(ReservationErrorMessage.IS_REQUIRED.message(), "Departure Date"));
+        HttpStatus.BAD_REQUEST.value(), EMPTY_DEPARTURE_DATE_RESPONSE);
   }
 
   @Test
@@ -272,6 +289,78 @@ public class ReservationControllerTest {
   @Test
   public void shouldFailDeleteWhenInvalidId() throws Exception {
     deleteReservationOperation.perform(mockMvc, "INVALID ID", HttpStatus.NOT_FOUND.value(), null);
+  }
+
+  @Test
+  public void shouldFailOnSaveConflictWithin() throws Exception {
+    saveReservationOperation.perform(mockMvc, reservationRequestBuilder
+        .createMockFromDates(LocalDate.now().plusDays(3), LocalDate.now().plusDays(5)),
+        HttpStatus.CREATED.value(), null);
+    saveReservationOperation.perform(mockMvc, reservationRequestBuilder
+        .createMockFromDates(LocalDate.now().plusDays(3), LocalDate.now().plusDays(4)),
+        HttpStatus.CONFLICT.value(), null);
+  }
+
+  @Test
+  public void shouldFailOnSaveConflictOverlapArrival() throws Exception {
+    saveReservationOperation.perform(mockMvc, reservationRequestBuilder
+        .createMockFromDates(LocalDate.now().plusDays(3), LocalDate.now().plusDays(5)),
+        HttpStatus.CREATED.value(), null);
+    saveReservationOperation.perform(mockMvc, reservationRequestBuilder
+        .createMockFromDates(LocalDate.now().plusDays(2), LocalDate.now().plusDays(4)),
+        HttpStatus.CONFLICT.value(), null);
+  }
+
+  @Test
+  public void shouldFailOnSaveConflictOverlapDeparture() throws Exception {
+    saveReservationOperation.perform(mockMvc, reservationRequestBuilder
+        .createMockFromDates(LocalDate.now().plusDays(3), LocalDate.now().plusDays(5)),
+        HttpStatus.CREATED.value(), null);
+    saveReservationOperation.perform(mockMvc, reservationRequestBuilder
+        .createMockFromDates(LocalDate.now().plusDays(4), LocalDate.now().plusDays(6)),
+        HttpStatus.CONFLICT.value(), null);
+  }
+
+  @Test
+  public void shouldFailOnUpdateConflictWithin() throws Exception {
+    String reservationId1 = saveReservationOperation.perform(mockMvc, reservationRequestBuilder
+        .createMockFromDates(LocalDate.now().plusDays(1), LocalDate.now().plusDays(3)),
+        HttpStatus.CREATED.value(), null);
+    saveReservationOperation.perform(mockMvc, reservationRequestBuilder
+        .createMockFromDates(LocalDate.now().plusDays(3), LocalDate.now().plusDays(5)),
+        HttpStatus.CREATED.value(), null);
+    updateReservationOperation.perform(
+        mockMvc, reservationId1, reservationRequestBuilder
+            .createMockFromDates(LocalDate.now().plusDays(3), LocalDate.now().plusDays(4)),
+        HttpStatus.CONFLICT.value(), null);
+  }
+
+  @Test
+  public void shouldFailOnUpdateConflictOverlapArrival() throws Exception {
+    String reservationId1 = saveReservationOperation.perform(mockMvc, reservationRequestBuilder
+        .createMockFromDates(LocalDate.now().plusDays(1), LocalDate.now().plusDays(3)),
+        HttpStatus.CREATED.value(), null);
+    saveReservationOperation.perform(mockMvc, reservationRequestBuilder
+        .createMockFromDates(LocalDate.now().plusDays(3), LocalDate.now().plusDays(5)),
+        HttpStatus.CREATED.value(), null);
+    updateReservationOperation.perform(
+        mockMvc, reservationId1, reservationRequestBuilder
+            .createMockFromDates(LocalDate.now().plusDays(2), LocalDate.now().plusDays(4)),
+        HttpStatus.CONFLICT.value(), null);
+  }
+
+  @Test
+  public void shouldFailOnUpdateConflictOverlapDeparture() throws Exception {
+    String reservationId1 = saveReservationOperation.perform(mockMvc, reservationRequestBuilder
+        .createMockFromDates(LocalDate.now().plusDays(1), LocalDate.now().plusDays(3)),
+        HttpStatus.CREATED.value(), null);
+    saveReservationOperation.perform(mockMvc, reservationRequestBuilder
+        .createMockFromDates(LocalDate.now().plusDays(3), LocalDate.now().plusDays(5)),
+        HttpStatus.CREATED.value(), null);
+    updateReservationOperation.perform(
+        mockMvc, reservationId1, reservationRequestBuilder
+            .createMockFromDates(LocalDate.now().plusDays(4), LocalDate.now().plusDays(6)),
+        HttpStatus.CONFLICT.value(), null);
   }
 
 }

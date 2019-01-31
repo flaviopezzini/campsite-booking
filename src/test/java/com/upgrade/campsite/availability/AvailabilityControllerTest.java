@@ -84,29 +84,30 @@ public class AvailabilityControllerTest {
 
   @Test
   public void shouldWorkAfterSavingUpdatingDeleting() throws Exception {
+    LocalDate today = LocalDate.now();
     String reservation1 = saveReservationOperation.perform(mockMvc, reservationRequestBuilder
-        .createMockFromDates(LocalDate.now().plusDays(3), LocalDate.now().plusDays(5)),
+        .createMockFromDates(today.plusDays(3), today.plusDays(5)),
         HttpStatus.CREATED.value(), null);
     String reservation2 = saveReservationOperation.perform(mockMvc, reservationRequestBuilder
-        .createMockFromDates(LocalDate.now().plusDays(5), LocalDate.now().plusDays(7)),
+        .createMockFromDates(today.plusDays(5), today.plusDays(7)),
         HttpStatus.CREATED.value(), null);
     String reservation3 = saveReservationOperation.perform(mockMvc, reservationRequestBuilder
-        .createMockFromDates(LocalDate.now().plusDays(8), LocalDate.now().plusDays(10)),
+        .createMockFromDates(today.plusDays(8), today.plusDays(10)),
         HttpStatus.CREATED.value(), null);
 
     updateReservationOperation
         .perform(
             mockMvc, reservation1, reservationRequestBuilder
-                .createMockFromDates(LocalDate.now().plusDays(2), LocalDate.now().plusDays(4)),
+                .createMockFromDates(today.plusDays(2), today.plusDays(4)),
             HttpStatus.OK.value(), null);
     updateReservationOperation
         .perform(
             mockMvc, reservation2, reservationRequestBuilder
-                .createMockFromDates(LocalDate.now().plusDays(4), LocalDate.now().plusDays(6)),
+                .createMockFromDates(today.plusDays(4), today.plusDays(6)),
             HttpStatus.OK.value(), null);
     updateReservationOperation.perform(
         mockMvc, reservation3, reservationRequestBuilder
-            .createMockFromDates(LocalDate.now().plusDays(11), LocalDate.now().plusDays(13)),
+            .createMockFromDates(LocalDate.now().plusDays(11), today.plusDays(13)),
         HttpStatus.OK.value(), null);
 
     deleteReservationOperation.perform(mockMvc, reservation1, HttpStatus.NO_CONTENT.value(), null);
@@ -114,8 +115,8 @@ public class AvailabilityControllerTest {
     final int FIRST_DAY = 1;
     final int LAST_DAY = 14;
     ArrayList<String> expectedAvailableDates = new ArrayList<>(0);
-    LocalDate startDate = LocalDate.now().plusDays(FIRST_DAY);
-    LocalDate endDate = LocalDate.now().plusDays(LAST_DAY);
+    LocalDate startDate = today.plusDays(FIRST_DAY);
+    LocalDate endDate = today.plusDays(LAST_DAY);
     Set<Integer> bookedDays = new HashSet<>();
     bookedDays.add(4);
     bookedDays.add(5);
@@ -125,14 +126,14 @@ public class AvailabilityControllerTest {
       if (bookedDays.contains(i)) {
         continue;
       }
-      expectedAvailableDates.add(LocalDate.now().plusDays(i).format(formatter));
+      expectedAvailableDates.add(today.plusDays(i).format(formatter));
     }
     String expectedJson = objectMapper.writeValueAsString(expectedAvailableDates);
 
     getAvailabilityOperation.perform(mockMvc, startDate, endDate, HttpStatus.OK.value(),
         expectedJson);
   }
-
+  
   @Test
   public void shouldFailForMissingEndDate() throws Exception {
     LocalDate startDate = LocalDate.now();

@@ -2,6 +2,7 @@ package com.upgrade.campsite.reservation;
 
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -18,6 +19,7 @@ import com.upgrade.campsite.resource.ResourceErrorMessage;
 import com.upgrade.campsite.resource.ResourceService;
 import com.upgrade.campsite.shared.InvalidRecordException;
 import com.upgrade.campsite.shared.RecordNotFoundException;
+import com.upgrade.campsite.shared.ReservationConflictException;
 import com.upgrade.campsite.shared.StringUtils;
 
 @RestController
@@ -38,7 +40,7 @@ public class ReservationController {
 
   @PostMapping(value = REST_PREFIX, produces = MediaType.APPLICATION_JSON_VALUE)
   public @ResponseBody ResponseEntity<Object> save(HttpServletRequest request,
-      @RequestBody ReservationRequest reservationRequest) {
+      @Valid @RequestBody ReservationRequest reservationRequest) {
 
     // Since we currently only have one resource, we are looking it up now
     // and using it by default. If it's ever decided to have more resources we'll have
@@ -57,6 +59,8 @@ public class ReservationController {
       return new ResponseEntity<>(stored.getId(), HttpStatus.CREATED);
     } catch (InvalidRecordException e) {
       return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+    } catch (ReservationConflictException e) {
+      return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
     } catch (RecordNotFoundException e) {
       return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -64,7 +68,7 @@ public class ReservationController {
 
   @PutMapping(value = REST_PREFIX_ID, produces = MediaType.APPLICATION_JSON_VALUE)
   public @ResponseBody ResponseEntity<Object> update(HttpServletRequest request,
-      @PathVariable("id") String id, @RequestBody ReservationRequest reservationRequest) {
+      @PathVariable("id") String id, @Valid @RequestBody ReservationRequest reservationRequest) {
     if (StringUtils.isEmpty(id)) {
       return new ResponseEntity<>(ReservationErrorMessage.NO_ID_PROVIDED.message(),
           HttpStatus.BAD_REQUEST);
@@ -77,6 +81,8 @@ public class ReservationController {
       return new ResponseEntity<>(stored.getId(), HttpStatus.OK);
     } catch (InvalidRecordException | RecordNotFoundException e) {
       return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+    } catch (ReservationConflictException e) {
+      return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
     }
   }
 

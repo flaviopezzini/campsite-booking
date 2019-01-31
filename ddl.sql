@@ -30,9 +30,9 @@ CREATE TABLE `reservation` (
 
 CREATE TABLE `availability` (
   `date` datetime NOT NULL,
-  `available` tinyint(1) NOT NULL,
+  `reservationId` varchar(36) DEFAULT NULL,
   PRIMARY KEY (`date`),
   UNIQUE KEY `date_UNIQUE` (`date`),
-  KEY `IDX_DATEANDAVAILABLE` (`date`,`available`)
+  KEY `FK_reservation_idx` (`reservationId`),
+  CONSTRAINT `FK_reservation` FOREIGN KEY (`reservationId`) REFERENCES `reservation` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf16;
-

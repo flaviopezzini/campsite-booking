@@ -3,7 +3,7 @@ package com.upgrade.campsite.reservation;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
-import org.springframework.util.StringUtils;
+import javax.validation.constraints.NotNull;
 import com.upgrade.campsite.resource.Resource;
 import com.upgrade.campsite.shared.DateFormats;
 import com.upgrade.campsite.shared.InvalidRecordException;
@@ -15,36 +15,20 @@ import lombok.NoArgsConstructor;
 public class ReservationRequest {
 
   private String id;
+  @NotNull
   private String email;
+  @NotNull
   private String name;
+  @NotNull
   private String arrivalDate;
+  @NotNull
   private String departureDate;
   private String resourceId;
 
   private LocalDate parsedArrivalDate;
   private LocalDate parsedDepartureDate;
   
-  private void validate() throws InvalidRecordException {
-    if (StringUtils.isEmpty(email)) {
-      throw new InvalidRecordException(
-          String.format(ReservationErrorMessage.IS_REQUIRED.message(), "Email"));
-    }
-
-    if (StringUtils.isEmpty(name)) {
-      throw new InvalidRecordException(
-          String.format(ReservationErrorMessage.IS_REQUIRED.message(), "Name"));
-    }
-
-    if (StringUtils.isEmpty(arrivalDate)) {
-      throw new InvalidRecordException(
-          String.format(ReservationErrorMessage.IS_REQUIRED.message(), "Arrival Date"));
-    }
-
-    if (StringUtils.isEmpty(departureDate)) {
-      throw new InvalidRecordException(
-          String.format(ReservationErrorMessage.IS_REQUIRED.message(), "Departure Date"));
-    }
-
+  public void validate() throws InvalidRecordException {
     try {
       parsedArrivalDate = LocalDate.parse(arrivalDate, DateFormats.LOCAL_DATE.formatter());
     } catch (DateTimeParseException e) {
@@ -81,12 +65,10 @@ public class ReservationRequest {
   }
 
   public Reservation createNewReservation(Resource resource) throws InvalidRecordException {
-    validate();
     return new Reservation(null, email, name, parsedArrivalDate, parsedDepartureDate, resource);
   }
 
   public Reservation updateReservation(Reservation oldReservation) throws InvalidRecordException {
-    validate();
     oldReservation.setId(id);
     oldReservation.setEmail(email);
     oldReservation.setName(name);

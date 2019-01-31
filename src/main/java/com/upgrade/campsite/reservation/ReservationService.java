@@ -8,6 +8,7 @@ import com.upgrade.campsite.resource.Resource;
 import com.upgrade.campsite.resource.ResourceService;
 import com.upgrade.campsite.shared.InvalidRecordException;
 import com.upgrade.campsite.shared.RecordNotFoundException;
+import com.upgrade.campsite.shared.ReservationConflictException;
 
 @Service
 public class ReservationService {
@@ -26,11 +27,20 @@ public class ReservationService {
   }
 
   public Reservation save(ReservationRequest record)
-      throws InvalidRecordException, RecordNotFoundException {
+      throws InvalidRecordException, RecordNotFoundException, ReservationConflictException {
+
+    record.validate();
+
     Reservation toSave = null;
     if (record.getId() == null) {
       Resource resource = resourceService.findById(record.getResourceId());
       toSave = record.createNewReservation(resource);
+      if (!availabilityService.isDateRangeAvailableForCreation(toSave.getArrivalDate(),
+          toSave.getDepartureDate())) {
+        throw new ReservationConflictException(
+            String.format(ReservationErrorMessage.CONFLICT.message(), record.getArrivalDate(),
+                record.getDepartureDate()));
+      }
     } else {
       Reservation oldReservation = findById(record.getId());
       if (oldReservation == null) {
@@ -38,11 +48,18 @@ public class ReservationService {
             String.format(ReservationErrorMessage.RECORD_NOT_FOUND.message(), record.getId()));
       }
       toSave = record.updateReservation(oldReservation);
+      if (!availabilityService.isDateRangeAvailableForUpdate(record.getId(),
+          toSave.getArrivalDate(), toSave.getDepartureDate())) {
+        throw new ReservationConflictException(
+            String.format(ReservationErrorMessage.CONFLICT.message(), record.getArrivalDate(),
+                record.getDepartureDate()));
+      }
       availabilityService.freeDates(oldReservation.getArrivalDate(),
           oldReservation.getDepartureDate());
     }
-    availabilityService.lockDates(toSave.getArrivalDate(), toSave.getDepartureDate());
-    return reservationRepository.save(toSave);
+    Reservation stored = reservationRepository.save(toSave);
+    availabilityService.lockDates(stored.getId(), toSave.getArrivalDate(), toSave.getDepartureDate());
+    return stored;
   }
 
   public Reservation findById(String id) {

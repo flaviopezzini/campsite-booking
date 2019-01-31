@@ -21,7 +21,7 @@ public class Availability {
   @JsonSerialize(using = LocalDateSerializer.class)
   private LocalDate date;
   
-  @Column(nullable = false)
-  private boolean available;
+  @Column(nullable = true)
+  private String reservationId;
   
 }
