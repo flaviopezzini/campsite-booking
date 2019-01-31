@@ -2,7 +2,6 @@ package com.upgrade.campsite.reservation;
 
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,8 +21,8 @@ import com.upgrade.campsite.shared.StringUtils;
 @RestController
 public class ReservationController {
 
-  static final String NO_ID_PROVIDED = "No ID provided.";
-  static final String INCORRECT_RESOURCE_SETUP = "Incorrect resource setup. Please contact the site administrators.";
+  static final String INCORRECT_RESOURCE_SETUP =
+      "Incorrect resource setup. Please contact the site administrators.";
   static final String REST_PREFIX = "/reservations";
   static final String REST_PREFIX_ID = REST_PREFIX + "/{id}";
 
@@ -33,46 +32,49 @@ public class ReservationController {
   private ResourceService resourceService;
 
   @Autowired
-  public ReservationController(ReservationService reservationService, ResourceService resourceService) {
+  public ReservationController(ReservationService reservationService,
+      ResourceService resourceService) {
     this.reservationService = reservationService;
     this.resourceService = resourceService;
   }
 
   @PostMapping(value = REST_PREFIX, produces = JSON_FORMAT)
   public @ResponseBody ResponseEntity<Object> save(HttpServletRequest request,
-      HttpServletResponse response, @RequestBody ReservationRequest reservationRequest) {
-    
+      @RequestBody ReservationRequest reservationRequest) {
+
     // Since we currently only have one resource, we are looking it up now
     // and using it by default. If it's ever decided to have more resources we'll have
     // to add it as a parameter
-    //TODO remove this block there are more than one resource
+    // TODO remove this block there are more than one resource
     List<Resource> resources = resourceService.findAll();
     if (resources.size() != 1) {
       return new ResponseEntity<>(INCORRECT_RESOURCE_SETUP, HttpStatus.INTERNAL_SERVER_ERROR);
     }
     Resource resource = resources.get(0);
     reservationRequest.setResourceId(resource.getId());
-    
+
     try {
       Reservation stored = reservationService.save(reservationRequest);
       return new ResponseEntity<>(stored.getId(), HttpStatus.CREATED);
     } catch (InvalidRecordException e) {
       return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+    } catch (RecordNotFoundException e) {
+      return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
   @PutMapping(value = REST_PREFIX_ID, produces = JSON_FORMAT)
   public @ResponseBody ResponseEntity<Object> update(HttpServletRequest request,
-      HttpServletResponse response, @PathVariable("id") String id,
-      @RequestBody ReservationRequest reservationRequest) {
+      @PathVariable("id") String id, @RequestBody ReservationRequest reservationRequest) {
     if (StringUtils.isEmpty(id)) {
-      return new ResponseEntity<>(NO_ID_PROVIDED, HttpStatus.BAD_REQUEST);
+      return new ResponseEntity<>(ReservationErrorMessage.NO_ID_PROVIDED.message(),
+          HttpStatus.BAD_REQUEST);
     }
 
     try {
       Reservation stored = reservationService.save(reservationRequest);
       return new ResponseEntity<>(stored.getId(), HttpStatus.OK);
-    } catch (InvalidRecordException e) {
+    } catch (InvalidRecordException | RecordNotFoundException e) {
       return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
   }

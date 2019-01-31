@@ -18,28 +18,34 @@ public class ReservationService {
 
   @Autowired
   public ReservationService(ReservationRepository reservationRepository,
-      ResourceService resourceService,
-      AvailabilityService availabilityService) {
+      ResourceService resourceService, AvailabilityService availabilityService) {
     super();
     this.reservationRepository = reservationRepository;
     this.resourceService = resourceService;
     this.availabilityService = availabilityService;
   }
 
-  public Reservation save(ReservationRequest record) throws InvalidRecordException {
+  public Reservation save(ReservationRequest record)
+      throws InvalidRecordException, RecordNotFoundException {
     Reservation toSave = null;
     if (record.getId() == null) {
       Resource resource = resourceService.findById(record.getResourceId());
       toSave = record.createNewReservation(resource);
     } else {
       Reservation oldReservation = findById(record.getId());
+      if (oldReservation == null) {
+        throw new RecordNotFoundException(
+            String.format("Trying ot update reservation with id: %s but the record was not found.",
+                record.getId()));
+      }
       toSave = record.updateReservation(oldReservation);
-      availabilityService.freeDates(oldReservation.getArrivalDate(), oldReservation.getDepartureDate());
+      availabilityService.freeDates(oldReservation.getArrivalDate(),
+          oldReservation.getDepartureDate());
     }
     availabilityService.lockDates(toSave.getArrivalDate(), toSave.getDepartureDate());
     return reservationRepository.save(toSave);
   }
-  
+
   public Reservation findById(String id) {
     Optional<Reservation> record = reservationRepository.findById(id);
 
@@ -51,7 +57,8 @@ public class ReservationService {
     if (dbReservation == null) {
       throw new RecordNotFoundException("Reservation not found when trying to delete: " + id);
     } else {
-      availabilityService.freeDates(dbReservation.getArrivalDate(), dbReservation.getDepartureDate());
+      availabilityService.freeDates(dbReservation.getArrivalDate(),
+          dbReservation.getDepartureDate());
       reservationRepository.deleteById(id);
     }
   }

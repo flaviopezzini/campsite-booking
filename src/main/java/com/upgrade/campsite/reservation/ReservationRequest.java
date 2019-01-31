@@ -8,21 +8,16 @@ import com.upgrade.campsite.resource.Resource;
 import com.upgrade.campsite.shared.DateFormats;
 import com.upgrade.campsite.shared.InvalidRecordException;
 import lombok.Data;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Data
-@RequiredArgsConstructor
+@NoArgsConstructor
 public class ReservationRequest {
 
   private String id;
-  @NonNull
   private String email;
-  @NonNull
   private String name;
-  @NonNull
   private String arrivalDate;
-  @NonNull
   private String departureDate;
   private String resourceId;
 
@@ -31,46 +26,56 @@ public class ReservationRequest {
 
   private void validate() throws InvalidRecordException {
     if (StringUtils.isEmpty(email)) {
-      throw new InvalidRecordException("Email is required.");
+      throw new InvalidRecordException(
+          String.format(ReservationErrorMessage.IS_REQUIRED.message(), "Email"));
     }
 
     if (StringUtils.isEmpty(name)) {
-      throw new InvalidRecordException("Name is required.");
+      throw new InvalidRecordException(
+          String.format(ReservationErrorMessage.IS_REQUIRED.message(), "Name"));
     }
 
     if (StringUtils.isEmpty(arrivalDate)) {
-      throw new InvalidRecordException("Arrival Date is required.");
+      throw new InvalidRecordException(
+          String.format(ReservationErrorMessage.IS_REQUIRED.message(), "Arrival Date"));
     }
 
     if (StringUtils.isEmpty(departureDate)) {
-      throw new InvalidRecordException("Departure Date is required.");
+      throw new InvalidRecordException(
+          String.format(ReservationErrorMessage.IS_REQUIRED.message(), "Departure Date"));
     }
 
     try {
       parsedArrivalDate = LocalDate.parse(arrivalDate, DateFormats.LOCAL_DATE.formatter());
     } catch (DateTimeParseException e) {
-      throw new InvalidRecordException("Arrival Date has an an invalid format.");
+      throw new InvalidRecordException(
+          String.format(ReservationErrorMessage.HAS_INVALID_FORMAT.message(), "Arrival Date"));
     }
 
     try {
       parsedDepartureDate = LocalDate.parse(departureDate, DateFormats.LOCAL_DATE.formatter());
     } catch (DateTimeParseException e) {
-      throw new InvalidRecordException("Departure Date has an invalid format.");
+      throw new InvalidRecordException(
+          String.format(ReservationErrorMessage.HAS_INVALID_FORMAT.message(), "Departure Date"));
     }
 
-    long daysBetweenArrivalAndDeparture = ChronoUnit.DAYS.between(parsedArrivalDate, parsedDepartureDate);
+    long daysBetweenArrivalAndDeparture =
+        ChronoUnit.DAYS.between(parsedArrivalDate, parsedDepartureDate);
     if (daysBetweenArrivalAndDeparture > 3L) {
-      throw new InvalidRecordException("Maximum stay is 3 days.");
+      throw new InvalidRecordException(ReservationErrorMessage.MAXIMUM_STAY_IS_3_DAYS.message());
     } else if (daysBetweenArrivalAndDeparture < 1L) {
-      throw new InvalidRecordException("Departure Date has to be after Arrival Date.");
+      throw new InvalidRecordException(
+          ReservationErrorMessage.DEPARTURE_DATE_HAS_TO_BE_AFTER_ARRIVAL_DATE.message());
     }
-    
+
     LocalDate today = LocalDate.now();
     long daysBetweenArrivalAndToday = ChronoUnit.DAYS.between(today, parsedArrivalDate);
     if (daysBetweenArrivalAndToday < 1L) {
-      throw new InvalidRecordException("Reservation has to be a minimum 1 day(s) ahead of arrival.");
+      throw new InvalidRecordException(
+          ReservationErrorMessage.RESERVATION_HAS_TO_BE_A_MINIMUM_1_DAY_AHEAD.message());
     } else if (daysBetweenArrivalAndToday > 30L) {
-      throw new InvalidRecordException("Reservation has to be up to a month in advance.");
+      throw new InvalidRecordException(
+          ReservationErrorMessage.RESERVATION_CAN_BE_UP_TO_A_MONTH_IN_ADVANCE.message());
     }
 
   }

@@ -80,8 +80,11 @@ public class AvailabilityControllerTest {
     LocalDate reservationArrivalDate = LocalDate.now().plusDays(3);
     LocalDate reservationDepartureDate = LocalDate.now().plusDays(5);
     
-    ReservationRequest reservationRequest = 
-        new ReservationRequest("email", "name", reservationArrivalDate.format(formatter), reservationDepartureDate.format(formatter));
+    ReservationRequest reservationRequest = new ReservationRequest();
+    reservationRequest.setEmail("email");
+    reservationRequest.setName("name");
+    reservationRequest.setArrivalDate(reservationArrivalDate.format(formatter));
+    reservationRequest.setDepartureDate(reservationDepartureDate.format(formatter));
     
     String requestJson = objectMapper.writeValueAsString(reservationRequest);
 
