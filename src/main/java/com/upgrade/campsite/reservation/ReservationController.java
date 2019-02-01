@@ -61,8 +61,10 @@ public class ReservationController {
     try {
       Reservation stored = reservationService.save(reservationRequest);
       return new ResponseEntity<>(stored.getId(), HttpStatus.OK);
-    } catch (InvalidRecordException | RecordNotFoundException e) {
+    } catch (InvalidRecordException e) {
       return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+    } catch (RecordNotFoundException e) {
+      return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
     } catch (ReservationConflictException e) {
       return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
     } catch (IncorrectResourceSetupException e) {
@@ -73,7 +75,7 @@ public class ReservationController {
   @DeleteMapping(value = REST_PREFIX_ID, produces = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<Object> delete(@PathVariable("id") String id) {
     try {
-      reservationService.delete(id);
+      reservationService.cancel(id);
       return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     } catch (RecordNotFoundException e) {
       return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);

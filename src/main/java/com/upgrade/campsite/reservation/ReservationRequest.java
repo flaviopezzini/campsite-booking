@@ -68,11 +68,11 @@ public class ReservationRequest {
   }
 
   public Reservation createNewReservation(Resource resource) throws InvalidRecordException {
-    return new Reservation(null, email, name, parsedArrivalDate, parsedDepartureDate, resource);
+    return new Reservation(null, email, name, parsedArrivalDate, parsedDepartureDate, true, resource);
   }
 
   public Reservation updateReservation(Reservation oldReservation) throws InvalidRecordException {
-    return new Reservation(oldReservation.getId(), email, name, parsedArrivalDate, parsedDepartureDate, oldReservation.getResource());
+    return new Reservation(oldReservation.getId(), email, name, parsedArrivalDate, parsedDepartureDate, true, oldReservation.getResource());
   }
   
 }

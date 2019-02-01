@@ -17,8 +17,7 @@ public class AvailabilityService {
     this.availabilityRepository = resourceRepository;
   }
 
-  public Availability findById(String resourceId, LocalDate date) {
-    AvailabilityId id = new AvailabilityId(resourceId, date);
+  public Availability findById(String id) {
     Optional<Availability> record = availabilityRepository.findById(id);
 
     return record.isPresent() ? record.get() : null;
@@ -79,13 +78,7 @@ public class AvailabilityService {
   }
 
   private void adjustAvailability(String resourceId, LocalDate startDate, LocalDate endDate, String reservationId) {
-    LocalDate workingDate = startDate;
-    while (workingDate.isBefore(endDate)) {
-      Availability availability = findById(resourceId, workingDate);
-      availability.setReservationId(reservationId);
-      save(availability);
-      workingDate = workingDate.plusDays(1);
-    }
+    availabilityRepository.adjustAvailability(resourceId, startDate, endDate, reservationId);
   }
 
 }

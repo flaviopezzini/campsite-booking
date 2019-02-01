@@ -267,7 +267,7 @@ public class ReservationControllerTest {
     final String INVALID_ID = "SOME INVALID ID";
     reservationRequest.setId(INVALID_ID);
     updateReservationOperation.perform(mockMvc, INVALID_ID, reservationRequest,
-        HttpStatus.BAD_REQUEST.value(),
+        HttpStatus.NOT_FOUND.value(),
         String.format(ReservationErrorMessage.RECORD_NOT_FOUND.message(), INVALID_ID));
   }
 
@@ -363,4 +363,39 @@ public class ReservationControllerTest {
         HttpStatus.CONFLICT.value(), null);
   }
 
+  @Test
+  public void shouldWorkSaveDeleteSave() throws Exception {
+    String reservationId = saveReservationOperation.perform(mockMvc, reservationRequestBuilder
+        .createMockFromDates(LocalDate.now().plusDays(1), LocalDate.now().plusDays(3)),
+        HttpStatus.CREATED.value(), null);
+    deleteReservationOperation.perform(mockMvc, reservationId,
+        HttpStatus.NO_CONTENT.value(), null);
+    saveReservationOperation.perform(mockMvc, reservationRequestBuilder
+        .createMockFromDates(LocalDate.now().plusDays(1), LocalDate.now().plusDays(3)),
+        HttpStatus.CREATED.value(), null);
+  }
+  
+  @Test
+  public void shouldFailSaveDeleteDelete() throws Exception {
+    String reservationId = saveReservationOperation.perform(mockMvc, reservationRequestBuilder
+        .createMockFromDates(LocalDate.now().plusDays(1), LocalDate.now().plusDays(3)),
+        HttpStatus.CREATED.value(), null);
+    deleteReservationOperation.perform(mockMvc, reservationId,
+        HttpStatus.NO_CONTENT.value(), null);
+    deleteReservationOperation.perform(mockMvc, reservationId,
+        HttpStatus.NOT_FOUND.value(), null);
+  }
+  
+  @Test
+  public void shouldFailSaveDeleteUpdate() throws Exception {
+    String reservationId = saveReservationOperation.perform(mockMvc, reservationRequestBuilder
+        .createMockFromDates(LocalDate.now().plusDays(1), LocalDate.now().plusDays(3)),
+        HttpStatus.CREATED.value(), null);
+    deleteReservationOperation.perform(mockMvc, reservationId,
+        HttpStatus.NO_CONTENT.value(), null);
+    updateReservationOperation.perform(
+        mockMvc, reservationId, reservationRequestBuilder
+            .createMockFromDates(LocalDate.now().plusDays(4), LocalDate.now().plusDays(6)),
+        HttpStatus.NOT_FOUND.value(), null);
+  }
 }

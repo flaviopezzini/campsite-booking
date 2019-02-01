@@ -41,6 +41,9 @@ public class Reservation {
   @JsonSerialize(using = LocalDateSerializer.class)
   private LocalDate departureDate;
   
+  @Column(nullable = false)
+  private boolean active;
+  
   @ManyToOne
   @JoinColumn(name = "resourceId")
   private Resource resource;

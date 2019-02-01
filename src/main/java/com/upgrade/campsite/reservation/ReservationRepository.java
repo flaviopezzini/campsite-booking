@@ -11,5 +11,5 @@ public interface ReservationRepository extends PagingAndSortingRepository<Reserv
   @Query("select r from Reservation r where r.arrivalDate < :endDate and r.departureDate > :startDate")
   List<Reservation> findByDateRange(@Param("startDate") LocalDate startDate,
       @Param("endDate") LocalDate endDate);
-
+  
 }

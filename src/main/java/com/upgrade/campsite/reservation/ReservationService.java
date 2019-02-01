@@ -52,7 +52,7 @@ public class ReservationService {
       toSave = record.createNewReservation(resource);
     } else {
       Reservation oldReservation = findById(record.getId());
-      if (oldReservation == null) {
+      if (oldReservation == null || !oldReservation.isActive()) {
         throw new RecordNotFoundException(
             String.format(ReservationErrorMessage.RECORD_NOT_FOUND.message(), record.getId()));
       }
@@ -68,7 +68,7 @@ public class ReservationService {
     Reservation stored = reservationRepository.save(toSave);
     availabilityService.lockDates(resource.getId(), stored.getId(), toSave.getArrivalDate(),
         toSave.getDepartureDate());
-
+    
     return stored;
   }
 
@@ -79,14 +79,15 @@ public class ReservationService {
   }
 
   @Transactional(isolation = Isolation.SERIALIZABLE)
-  public void delete(String id) throws RecordNotFoundException {
+  public void cancel(String id) throws RecordNotFoundException {
     Reservation dbReservation = findById(id);
-    if (dbReservation == null) {
+    if (dbReservation == null || !dbReservation.isActive()) {
       throw new RecordNotFoundException("Reservation not found when trying to delete: " + id);
     } else {
       availabilityService.freeDates(dbReservation.getResource().getId(),
           dbReservation.getArrivalDate(), dbReservation.getDepartureDate());
-      reservationRepository.deleteById(id);
+      dbReservation.setActive(false);
+      reservationRepository.save(dbReservation);
     }
   }
 }
