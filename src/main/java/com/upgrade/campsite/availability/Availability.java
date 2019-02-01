@@ -1,11 +1,8 @@
 package com.upgrade.campsite.availability;
 
-import java.time.LocalDate;
 import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.Id;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.upgrade.campsite.shared.LocalDateSerializer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,10 +13,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Availability {
 
-  @Id
-  @Column(nullable = false)
-  @JsonSerialize(using = LocalDateSerializer.class)
-  private LocalDate date;
+  @EmbeddedId
+  private AvailabilityId id;
   
   @Column(nullable = true)
   private String reservationId;

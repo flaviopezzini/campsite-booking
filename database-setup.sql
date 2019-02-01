@@ -29,42 +29,42 @@ CREATE TABLE `reservation` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf16;
 
 CREATE TABLE `availability` (
+  `resourceId` varchar(36) NOT NULL,
   `date` datetime NOT NULL,
   `reservationId` varchar(36) DEFAULT NULL,
-  PRIMARY KEY (`date`),
-  UNIQUE KEY `date_UNIQUE` (`date`),
+  PRIMARY KEY (`resourceId`,`date`),
   KEY `FK_reservation_idx` (`reservationId`),
   CONSTRAINT `FK_reservation` FOREIGN KEY (`reservationId`) REFERENCES `reservation` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf16;
 
 
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 1 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 2 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 3 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 4 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 5 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 6 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 7 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 8 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 9 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 10 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 11 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 12 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 13 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 14 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 15 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 16 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 17 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 18 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 19 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 20 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 21 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 22 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 23 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 24 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 25 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 26 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 27 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 28 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 29 DAY), null);
-insert into availability (date, reservationId) values (DATE_ADD(CURDATE(), INTERVAL 30 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 1 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 2 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 3 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 4 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 5 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 6 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 7 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 8 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 9 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 10 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 11 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 12 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 13 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 14 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 15 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 16 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 17 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 18 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 19 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 20 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 21 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 22 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 23 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 24 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 25 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 26 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 27 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 28 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 29 DAY), null);
+insert into availability (resourceId, date, reservationId) values (select id from resource where name = 'CAMPSITE', DATE_ADD(CURDATE(), INTERVAL 30 DAY), null);

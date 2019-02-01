@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import com.upgrade.campsite.resource.Resource;
+import com.upgrade.campsite.resource.ResourceService;
 import com.upgrade.campsite.shared.DateFormats;
 import com.upgrade.campsite.shared.StringUtils;
 
@@ -22,15 +24,19 @@ public class AvailabilityController {
   public static final String AVAILABILITY_END_POINT = "/availability";
 
   private AvailabilityService availabilityService;
+  private ResourceService resourceService;
 
   @Autowired
-  public AvailabilityController(AvailabilityService availabilityService) {
+  public AvailabilityController(AvailabilityService availabilityService,
+      ResourceService resourceService) {
     this.availabilityService = availabilityService;
+    this.resourceService = resourceService;
   }
 
   @CrossOrigin
   @GetMapping(value = AVAILABILITY_END_POINT, produces = MediaType.APPLICATION_JSON_VALUE)
   public @ResponseBody ResponseEntity<Object> list(HttpServletRequest request,
+      @RequestParam(name = "resourceId", required = false) String resourceId,
       @RequestParam(name = "startDate", required = false) String startDatePar,
       @RequestParam(name = "endDate", required = false) String endDatePar) {
     LocalDate startDate = null;
@@ -63,7 +69,9 @@ public class AvailabilityController {
       }
     }
 
-    return new ResponseEntity<>(availabilityService.findByDateRange(startDate, endDate),
+    Resource resource = resourceService.getOrDefault(resourceId);
+    
+    return new ResponseEntity<>(availabilityService.findByDateRange(resource.getId(), startDate, endDate),
         HttpStatus.OK);
   }
 

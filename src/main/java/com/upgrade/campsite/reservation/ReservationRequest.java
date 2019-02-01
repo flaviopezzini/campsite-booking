@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import com.upgrade.campsite.resource.Resource;
 import com.upgrade.campsite.shared.DateFormats;
 import com.upgrade.campsite.shared.InvalidRecordException;
@@ -16,8 +17,10 @@ public class ReservationRequest {
 
   private String id;
   @NotNull
+  @Size(max = 40)
   private String email;
   @NotNull
+  @Size(max = 40)
   private String name;
   @NotNull
   private String arrivalDate;

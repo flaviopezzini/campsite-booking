@@ -1,6 +1,5 @@
 package com.upgrade.campsite.reservation;
 
-import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -8,7 +7,6 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import com.upgrade.campsite.availability.AvailabilityService;
 import com.upgrade.campsite.resource.Resource;
-import com.upgrade.campsite.resource.ResourceErrorMessage;
 import com.upgrade.campsite.resource.ResourceService;
 import com.upgrade.campsite.shared.IncorrectResourceSetupException;
 import com.upgrade.campsite.shared.InvalidRecordException;
@@ -31,34 +29,24 @@ public class ReservationService {
     this.availabilityService = availabilityService;
   }
 
-  @Transactional(isolation=Isolation.SERIALIZABLE)
-  public Reservation save(ReservationRequest record)
-      throws InvalidRecordException, RecordNotFoundException, ReservationConflictException,
-      IncorrectResourceSetupException {
-    
-    // Since we currently only have one resource, we are looking it up now
-    // and using it by default. If it's ever decided to have more resources we'll have
-    // to add it as a parameter
-    // TODO remove this block there are more than one resource
-    List<Resource> resources = resourceService.findAll();
-    if (resources.size() != 1) {
-      throw new IncorrectResourceSetupException(ResourceErrorMessage.INCORRECT_RESOURCE_SETUP.message());
-    }
-    Resource resource = resources.get(0);
+  @Transactional(isolation = Isolation.SERIALIZABLE)
+  public Reservation save(ReservationRequest record) throws InvalidRecordException,
+      RecordNotFoundException, ReservationConflictException, IncorrectResourceSetupException {
+    Resource resource = resourceService.getOrDefault(record.getResourceId());
     record.setResourceId(resource.getId());
 
     record.validate();
 
-    availabilityService.blockChangesByDateRange(record.getParsedArrivalDate(),
+    availabilityService.blockChangesByDateRange(resource.getId(), record.getParsedArrivalDate(),
         record.getParsedDepartureDate());
 
-    if (!availabilityService.isDateRangeAvailable(record.getId(), record.getParsedArrivalDate(),
-        record.getParsedDepartureDate())) {
+    if (!availabilityService.isDateRangeAvailable(resource.getId(), record.getId(),
+        record.getParsedArrivalDate(), record.getParsedDepartureDate())) {
       throw new ReservationConflictException(
           String.format(ReservationErrorMessage.CONFLICT.message(), record.getArrivalDate(),
               record.getDepartureDate()));
     }
-    
+
     Reservation toSave = null;
     if (record.getId() == null) {
       toSave = record.createNewReservation(resource);
@@ -70,15 +58,15 @@ public class ReservationService {
       }
 
       // Block dates for the previous reservation
-      availabilityService.blockChangesByDateRange(oldReservation.getArrivalDate(),
+      availabilityService.blockChangesByDateRange(resource.getId(), oldReservation.getArrivalDate(),
           oldReservation.getDepartureDate());
-      
+
       toSave = record.updateReservation(oldReservation);
-      availabilityService.freeDates(oldReservation.getArrivalDate(),
+      availabilityService.freeDates(resource.getId(), oldReservation.getArrivalDate(),
           oldReservation.getDepartureDate());
     }
     Reservation stored = reservationRepository.save(toSave);
-    availabilityService.lockDates(stored.getId(), toSave.getArrivalDate(),
+    availabilityService.lockDates(resource.getId(), stored.getId(), toSave.getArrivalDate(),
         toSave.getDepartureDate());
 
     return stored;
@@ -90,14 +78,14 @@ public class ReservationService {
     return record.isPresent() ? record.get() : null;
   }
 
-  @Transactional(isolation=Isolation.SERIALIZABLE)
+  @Transactional(isolation = Isolation.SERIALIZABLE)
   public void delete(String id) throws RecordNotFoundException {
     Reservation dbReservation = findById(id);
     if (dbReservation == null) {
       throw new RecordNotFoundException("Reservation not found when trying to delete: " + id);
     } else {
-      availabilityService.freeDates(dbReservation.getArrivalDate(),
-          dbReservation.getDepartureDate());
+      availabilityService.freeDates(dbReservation.getResource().getId(),
+          dbReservation.getArrivalDate(), dbReservation.getDepartureDate());
       reservationRepository.deleteById(id);
     }
   }
