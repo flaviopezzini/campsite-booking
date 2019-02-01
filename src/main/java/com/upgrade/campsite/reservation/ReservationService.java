@@ -78,7 +78,7 @@ public class ReservationService {
     return record.isPresent() ? record.get() : null;
   }
 
-  @Transactional(isolation = Isolation.SERIALIZABLE)
+  @Transactional(isolation = Isolation.REPEATABLE_READ)
   public void cancel(String id) throws RecordNotFoundException {
     Reservation dbReservation = findById(id);
     if (dbReservation == null || !dbReservation.isActive()) {
