@@ -69,12 +69,7 @@ public class ReservationRequest {
   }
 
   public Reservation updateReservation(Reservation oldReservation) throws InvalidRecordException {
-    oldReservation.setId(id);
-    oldReservation.setEmail(email);
-    oldReservation.setName(name);
-    oldReservation.setArrivalDate(parsedArrivalDate);
-    oldReservation.setDepartureDate(parsedDepartureDate);
-    return oldReservation;
+    return new Reservation(oldReservation.getId(), email, name, parsedArrivalDate, parsedDepartureDate, oldReservation.getResource());
   }
   
 }

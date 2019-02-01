@@ -10,8 +10,9 @@ spring:
        naming:
           physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     generate-ddl: false
-   
+         
 server:
    error:
       whitelabel:
          enabled: false
+         

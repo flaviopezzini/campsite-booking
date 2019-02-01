@@ -1,6 +1,5 @@
 package com.upgrade.campsite.reservation;
 
-import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +13,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-import com.upgrade.campsite.resource.Resource;
-import com.upgrade.campsite.resource.ResourceErrorMessage;
-import com.upgrade.campsite.resource.ResourceService;
+import com.upgrade.campsite.shared.IncorrectResourceSetupException;
 import com.upgrade.campsite.shared.InvalidRecordException;
 import com.upgrade.campsite.shared.RecordNotFoundException;
 import com.upgrade.campsite.shared.ReservationConflictException;
@@ -29,30 +26,15 @@ public class ReservationController {
   public static final String REST_PREFIX_ID = REST_PREFIX + "/{id}";
 
   private ReservationService reservationService;
-  private ResourceService resourceService;
 
   @Autowired
-  public ReservationController(ReservationService reservationService,
-      ResourceService resourceService) {
+  public ReservationController(ReservationService reservationService) {
     this.reservationService = reservationService;
-    this.resourceService = resourceService;
   }
 
   @PostMapping(value = REST_PREFIX, produces = MediaType.APPLICATION_JSON_VALUE)
   public @ResponseBody ResponseEntity<Object> save(HttpServletRequest request,
       @Valid @RequestBody ReservationRequest reservationRequest) {
-
-    // Since we currently only have one resource, we are looking it up now
-    // and using it by default. If it's ever decided to have more resources we'll have
-    // to add it as a parameter
-    // TODO remove this block there are more than one resource
-    List<Resource> resources = resourceService.findAll();
-    if (resources.size() != 1) {
-      return new ResponseEntity<>(ResourceErrorMessage.INCORRECT_RESOURCE_SETUP.message(),
-          HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-    Resource resource = resources.get(0);
-    reservationRequest.setResourceId(resource.getId());
 
     try {
       Reservation stored = reservationService.save(reservationRequest);
@@ -61,7 +43,7 @@ public class ReservationController {
       return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
     } catch (ReservationConflictException e) {
       return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
-    } catch (RecordNotFoundException e) {
+    } catch (RecordNotFoundException | IncorrectResourceSetupException e) {
       return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
@@ -83,6 +65,8 @@ public class ReservationController {
       return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
     } catch (ReservationConflictException e) {
       return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
+    } catch (IncorrectResourceSetupException e) {
+      return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 

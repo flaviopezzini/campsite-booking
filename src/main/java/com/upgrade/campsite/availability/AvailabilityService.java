@@ -40,34 +40,28 @@ public class AvailabilityService {
     return availabilityRepository.findByDateRange(startDate, endDate);
   }
   
-  public boolean isDateRangeAvailableForCreation(LocalDate startDate, LocalDate endDate) {
-    Long count = availabilityRepository.countUnavailableByDateRangeForCreation(startDate, endDate);
-    List<Availability> list = availabilityRepository.findAll();
-    System.out.println("***************************** CREATION *********************************************************");
-    System.out.println("************************************************************************************************");
-    System.out.println("************************************************************************************************");
-    for (Availability av : list) {
-      System.out.println(av.getDate() + "     " + av.getReservationId());
-    }
-    System.out.println("************************************************************************************************");
-    System.out.println("************************************************************************************************");
-    System.out.println("************************************************************************************************");
-    return count == 0;
+  /**
+   * Blocks the records for these dates to ensure other threads can't make changes to it.
+   * @param startDate
+   * @param endDate
+   * @return
+   */
+  public List<Availability> blockChangesByDateRange(LocalDate startDate, LocalDate endDate) {
+    return availabilityRepository.blockChangesByDateRange(startDate, endDate);
   }
   
-  public boolean isDateRangeAvailableForUpdate(String oldReservationId, LocalDate startDate, LocalDate endDate) {
-    Long count = availabilityRepository.countUnavailableByDateRangeForUpdate(oldReservationId, startDate, endDate);
-    List<Availability> list = availabilityRepository.findAll();
-    System.out.println("****************************** UPDATE **********************************************************");
-    System.out.println("************************************************************************************************");
-    System.out.println("************************************************************************************************");
-    for (Availability av : list) {
-      System.out.println(av.getDate() + "     " + av.getReservationId());
+  public List<Availability> findAll() {
+    return availabilityRepository.findAll();
+  }
+  
+  public boolean isDateRangeAvailable(String oldReservationId, LocalDate startDate, LocalDate endDate) {
+    List<String> reservationIdListFromUnavailable = availabilityRepository.findUnavailableByDateRange(startDate, endDate);
+    
+    if (oldReservationId != null && !reservationIdListFromUnavailable.isEmpty()) {
+      reservationIdListFromUnavailable.remove(oldReservationId);
     }
-    System.out.println("************************************************************************************************");
-    System.out.println("************************************************************************************************");
-    System.out.println("************************************************************************************************");
-    return count == 0;
+
+    return reservationIdListFromUnavailable.isEmpty();
   }
   
   public void lockDates(String reservationId, LocalDate startDate, LocalDate endDate) {
@@ -87,5 +81,5 @@ public class AvailabilityService {
       workingDate = workingDate.plusDays(1);
     }
   }
-
+  
 }
